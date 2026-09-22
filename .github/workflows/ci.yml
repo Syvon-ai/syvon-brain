@@ -15,3 +15,4 @@ jobs:
       - run: npm run type-check
       - run: npm test
       - run: npm run example
+      - run: node examples/work-scope.mjs

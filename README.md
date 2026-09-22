@@ -4,7 +4,7 @@ The open-source workspace organism from [Syvon](https://github.com/Syvon-ai): a 
 
 Brain gives files a shared structure, carries brand DNA, describes agent permissions and tool access, records approvals and revisions, and collects feedback signals. Storage is supplied by the host through callbacks.
 
-**Initial release:** the organism core and declarative tool library. This is a library, not a hosted agent or a standalone visual app. Semantic retrieval, automatic learning and the spatial Brain UI are not included yet. See the [intelligence roadmap](docs/ROADMAP.md) and [extraction scope](docs/EXTRACTION.md).
+**Initial release:** the organism core and declarative tool library. This is a library, not a hosted agent or a standalone visual app. Portable intent, scope-grant, outcome and Dream-receipt contracts are included. Dream orchestration, semantic retrieval, automatic learning and the spatial Brain UI are not part of this library. See the [intelligence roadmap](docs/ROADMAP.md) and [extraction scope](docs/EXTRACTION.md).
 
 ## Quick start
 
@@ -45,6 +45,10 @@ await collectSignal(readFile, writeFile, 'signals.json', {
 ~~~
 
 See [examples/workspace.mjs](examples/workspace.mjs) for a complete runnable adapter.
+
+## Intent and bounded continuation
+
+See [work contracts](docs/WORK-CONTRACTS.md) and [domain vocabulary](CONTEXT.md). Run `npm run example:work` for a synthetic scope, a grant bound to its canonical digest, an unmeasured outcome and an idle Dream receipt. No work is scheduled and no AI service is called.
 
 ## Integration contract
 

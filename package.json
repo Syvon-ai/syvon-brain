@@ -15,7 +15,8 @@
     "build": "npm run build --workspace=@syvon/tool-library && npm run build --workspace=@syvon/organism",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
-    "example": "npm run build && node examples/workspace.mjs"
+    "example": "npm run build && node examples/workspace.mjs",
+    "example:work": "npm run build && node examples/work-scope.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "30.0.0",

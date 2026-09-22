@@ -11,3 +11,5 @@ The spatial Brain UI and workspace-sync integrity engine remain integration work
 The Google Fonts catalog contains font metadata, not font binaries. Upstream font licenses apply separately to any fonts downloaded by a consuming app.
 
 The cross-package archetype test that scans the private agent implementation registry is not runnable here. Its standalone audience-subset assertion is retained; registry closure remains a host integration check. The standalone test toolchain is updated separately from the private monorepo.
+
+The additive work-contracts update is implemented in the source organism and copied into this public core. It publishes declarations, parsers, path conventions and synthetic examples only. Dream orchestration and existing autopilot behavior remain private.
