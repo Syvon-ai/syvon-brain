@@ -1,0 +1,33 @@
+{
+  "name": "@syvon/organism",
+  "version": "0.1.0",
+  "description": "Syvon Brain workspace organism, DNA, permissions and signals",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cards/picker-script": {
+      "types": "./dist/cards/picker-script.d.ts",
+      "import": "./dist/cards/picker-script.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/cards/picker-script.ts --format esm --dts --clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Syvon-ai/syvon-brain.git",
+    "directory": "packages/organism"
+  },
+  "dependencies": {
+    "@syvon/tool-library": "0.1.0"
+  }
+}

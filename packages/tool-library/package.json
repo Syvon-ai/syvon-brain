@@ -1,0 +1,26 @@
+{
+  "name": "@syvon/tool-library",
+  "version": "0.1.0",
+  "description": "Declarative tool packages for Syvon Brain",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Syvon-ai/syvon-brain.git",
+    "directory": "packages/tool-library"
+  }
+}
