@@ -116,6 +116,23 @@ export const WORKSPACE_CONFIG = {
     // `autoCreate: false`, like `tools/` and `skills/`: a workspace with no
     // agent should not carry an empty folder that reads as something missing.
     { path: 'agents',    label: 'Agents',      autoCreate: false, reserved: true,  hidden: false, sync: true, versioned: true  },   // a manifest is capability — its history is an audit trail
+    // The workspace's own DOCUMENTATION — how THIS workspace is organised and
+    // run: its project structure and versioning, naming conventions, decisions
+    // and why they were made, how-tos for the people and agents working in it.
+    // Markdown, authored by hand or by an agent, read before a structural change.
+    //
+    // Not one of the prose roots it sits beside. `meta/` is the BRAND speaking
+    // (voice, strategy, design language); `knowledge/` and `assets/knowledge/`
+    // are what the brand KNOWS, retrieved to ground generation; `skills/` is the
+    // agent's METHOD, adopted as behaviour. This is how the WORKSPACE works —
+    // nothing here is injected into a prompt or retrieved for grounding; it is
+    // read on purpose, the way a repository's docs are. The root `AGENTS.md`
+    // (WORKSPACE_ROOT_DOCS) stays the short instruction an agent finds first,
+    // and points here for the rest.
+    //
+    // `autoCreate: false`, like `tools/` and `skills/`: an empty reserved folder
+    // in every checkout reads as something missing.
+    { path: 'docs',      label: 'Docs',        autoCreate: false, reserved: true,  hidden: false, sync: true, versioned: true  },   // authored documentation — its history is the record of how the workspace changed
     // Now holds the kit as well as `fonts/` — that merge is the other half of
     // the v11 flatten.
     { path: 'assets',    label: 'Assets',     autoCreate: true,  reserved: true,  hidden: false, sync: true, versioned: false },   // media root; its text files are imported, not authored
@@ -390,6 +407,8 @@ export const WS_TEMPLATES = folderPath('templates'); // 'templates'
  *  designs draw from. No design lives here; see the folders[] entry. */
 export const WS_CONTENT = folderPath('content');     // 'content'
 export const WS_TOOLS = folderPath('tools');         // 'tools' — workspace-authored .tool files
+/** The workspace's own documentation — how it is organised and run. */
+export const WS_DOCS = folderPath('docs');           // 'docs'
 export const WS_IMPORT = folderPath('import');       // 'import' (external imports)
 export const WS_ASSETS = folderPath('assets');       // 'assets' — kit + fonts (v11)
 export const WS_CONFIG = folderPath('config');       // 'config' (v11)
@@ -460,6 +479,10 @@ export const WORKSPACE_ROOT_PREFIXES = [
   // from a `.tool` or a comp resolves against the workspace ROOT rather than
   // against whatever directory the referring file happens to sit in.
   'agents/',
+  // The workspace's own documentation. Listed so `docs/projects.md` linked
+  // from an intent, a comp's source or a `.tool` resolves against the
+  // workspace ROOT rather than the directory the referring file sits in.
+  'docs/',
   // The agent's own interface. A widget is referenced from a .comp and from a
   // host surface alike, so it has to resolve against the workspace ROOT in both
   // — `widget/foo.react` inside a sequence must not become
@@ -647,7 +670,8 @@ export function versionedDirsFor(workspaceId: string): readonly string[] {
  * root-granular and this is one folder deep inside a root that is otherwise
  * entirely authored.
  */
-const PROJECT_OUTPUT_RE = /^projects\/[^/]+\/output\//;
+// A round's renders (`projects/{slug}/v{n}/output/`) are product too.
+const PROJECT_OUTPUT_RE = /^projects\/[^/]+\/(?:v\d+\/)?output\//;
 
 /**
  * Does this WORKSPACE-RELATIVE key belong in the file version log?

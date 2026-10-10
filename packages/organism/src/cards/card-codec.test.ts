@@ -179,12 +179,36 @@ describe('readCards / appendCard', () => {
     await appendCard(ctx, '', card({ id: 'a', status: 'open' }));
     await appendCard(ctx, '', card({ id: 'a', status: 'done', resolution: 'reworked' }));
 
-    // Two lines on disk — the log is append-only, nothing was rewritten.
-    expect(files['meta/cards.jsonl'].trim().split('\n')).toHaveLength(2);
+    // Two lines in the TASKS log — append-only, nothing rewritten, and no
+    // legacy log was ever created.
+    expect(files['meta/tasks.jsonl'].trim().split('\n')).toHaveLength(2);
+    expect(files['meta/cards.jsonl']).toBeUndefined();
 
     const out = await readCards(ctx, '');
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({ id: 'a', status: 'done', resolution: 'reworked' });
+  });
+
+  it('writes a note-card to the notes log and reads it back as the same card', async () => {
+    const { ctx, files } = memory();
+    await appendCard(ctx, '', card({ id: 'n', kind: 'feedback', instruction: 'Hard cuts only.' }));
+    expect(files['meta/notes.jsonl']).toContain('Hard cuts only.');
+    expect(files['meta/tasks.jsonl']).toBeUndefined();
+    expect((await readCards(ctx, '')).map((c) => [c.id, c.kind, c.instruction])).toEqual([['n', 'feedback', 'Hard cuts only.']]);
+    await appendCard(ctx, '', card({ id: 'n', kind: 'feedback', instruction: 'Hard cuts only.', status: 'dropped' }));
+    expect(await readCards(ctx, '')).toEqual([]);
+  });
+
+  it('reads a legacy log without writing, migrates on the first write, and still hears a writer that has not moved', async () => {
+    const { ctx, files } = memory({ 'meta/cards.jsonl': `${JSON.stringify(card({ id: 'old', at_iso: '2026-09-01T00:00:00.000Z' }))}\n` });
+    expect((await readCards(ctx, '')).map((c) => c.id)).toEqual(['old']);
+    expect(files['meta/tasks.jsonl']).toBeUndefined();
+    await appendCard(ctx, '', card({ id: 'old', status: 'working', at_iso: '2026-09-01T01:00:00.000Z' }));
+    expect(files['meta/tasks.jsonl']).toContain('"migrated"');
+    expect((await readCards(ctx, '')).map((c) => [c.id, c.status])).toEqual([['old', 'working']]);
+    // An unmoved writer appends to the legacy log after the migration.
+    files['meta/cards.jsonl'] += `${JSON.stringify(card({ id: 'late', at_iso: '2026-09-02T00:00:00.000Z' }))}\n`;
+    expect((await readCards(ctx, '')).map((c) => c.id)).toEqual(['old', 'late']);
   });
 
   it('compacts once the log passes its cap, losing nothing reachable', async () => {
@@ -197,9 +221,9 @@ describe('readCards / appendCard', () => {
 
     await appendCard(ctx, '', card({ id: 'churn', status: 'done', resolution: 'finally' }));
 
-    const after = files['meta/cards.jsonl'].trim().split('\n');
-    expect(after).toHaveLength(2);
     const out = await readCards(ctx, '');
+    // Compacted on the read: the mark, then one line per task.
+    expect(files['meta/tasks.jsonl'].trim().split('\n')).toHaveLength(3);
     expect(out.map((c) => c.id).sort()).toEqual(['churn', 'keep']);
     expect(out.find((c) => c.id === 'churn')?.resolution).toBe('finally');
   });

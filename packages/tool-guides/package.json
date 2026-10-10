@@ -1,0 +1,28 @@
+{
+  "name": "@syvon/tool-guides",
+  "version": "0.1.0",
+  "description": "The usage guide for every Syvon MCP tool, one file per tool",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "references",
+    "SKILL.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Syvon-ai/syvon-brain.git",
+    "directory": "packages/tool-guides"
+  }
+}

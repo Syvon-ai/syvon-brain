@@ -32,6 +32,7 @@
 // The package map for `packages: [...]` lending — the zero-dep leaf both this
 // package and @syvon/agent share (agent already depends on organism, so the map
 // cannot live in either of those without a cycle).
+import { currentToolName } from './tool-renames';
 import { expandPackages, packageById } from '@syvon/tool-library';
 
 /** Material Symbols name, for the honeycomb tool ball. */
@@ -169,7 +170,9 @@ export function parseMcpDeclaration(raw: unknown, source: string, fallbackSlug: 
   const tools: McpToolRef[] = Array.isArray(raw.tools)
     ? raw.tools
         .map((entry): McpToolRef | null => {
-          if (typeof entry === 'string') return { name: entry };
+          /* An old tool name reads as its current one (`TOOL_RENAMES`): a
+             workspace's allowlist written before a rename keeps its tools. */
+          if (typeof entry === 'string') return { name: currentToolName(entry) };
           if (!isRecord(entry) || typeof entry.name !== 'string' || !entry.name) return null;
           // Anything other than the two known runtimes falls back to `registry`
           // — the safe default, because a typo that silently marked a tool
@@ -177,7 +180,7 @@ export function parseMcpDeclaration(raw: unknown, source: string, fallbackSlug: 
           // serving a tool that works.
           const runtime: McpToolRuntime = entry.runtime === 'brain' ? 'brain' : 'registry';
           return {
-            name: entry.name,
+            name: currentToolName(entry.name),
             runtime,
             ...(typeof entry.icon === 'string' ? { icon: entry.icon } : {}),
             ...(typeof entry.label === 'string' ? { label: entry.label } : {}),

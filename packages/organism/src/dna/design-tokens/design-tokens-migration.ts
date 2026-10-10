@@ -52,8 +52,12 @@ function designTokensToDna(tokens: DesignTokens) {
   const background = colors.background;
   const text = colors.text;
 
-  const textMuted = opacityBlend(text, 0.6, background);
-  const border = opacityBlend(colors.neutral, 0.25, background);
+  // Derived only when the file did not say. A v1 file that wrote its own
+  // muted/border colour meant that colour; recomputing it here silently
+  // replaced a brand's values with the formula's the first time the token
+  // editor opened the file.
+  const textMuted = colors.textMuted ?? opacityBlend(text, 0.6, background);
+  const border = colors.border ?? opacityBlend(colors.neutral, 0.25, background);
 
   const typeDefaults = APP_DEFAULTS.type!;
   const baseSize = parsePx(tokens.type?.baseSize ?? typeDefaults.baseSize, 16);
@@ -218,6 +222,16 @@ export function migrateV1ToV2(v1: Partial<DesignTokens>): DesignTokensV2 {
     'meta.textScale':    rv('size', String(dna.textScale), 'Text Scale'),
     'meta.spacingScale': rv('size', String(dna.spacingScale), 'Spacing Scale'),
   };
+
+  // Keys the registry above has no slot for (`fonts.icons`, a brand's extra
+  // colour) are carried over as-is rather than dropped. Read from the FILE,
+  // not `merged`, so the defaults' own keys (`neutral`) are not invented.
+  for (const [key, value] of Object.entries(v1.colors ?? {})) {
+    if (typeof value === 'string' && !(`color.${key}` in variables)) variables[`color.${key}`] = rv('color', value);
+  }
+  for (const [key, value] of Object.entries(v1.fonts ?? {})) {
+    if (typeof value === 'string' && !(`font.${key}` in variables)) variables[`font.${key}`] = rv('font', value);
+  }
 
   return {
     $schema: 'design-tokens/v2',

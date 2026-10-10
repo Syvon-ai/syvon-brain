@@ -13,11 +13,14 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
+      "@syvon/tool-library": [
+        "./packages/tool-library/src/index.ts"
+      ],
       "@syvon/organism": [
         "./packages/organism/src/index.ts"
       ],
-      "@syvon/tool-library": [
-        "./packages/tool-library/src/index.ts"
+      "@syvon/tool-guides": [
+        "./packages/tool-guides/src/index.ts"
       ]
     }
   },

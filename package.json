@@ -12,7 +12,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "build": "npm run build --workspace=@syvon/tool-library && npm run build --workspace=@syvon/organism",
+    "build": "npm run build --workspace=@syvon/tool-library && npm run build --workspace=@syvon/organism && npm run build --workspace=@syvon/tool-guides",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
     "example": "npm run build && node examples/workspace.mjs",

@@ -18,6 +18,11 @@ export interface BlockStylePreset {
   fontStretch?: string;
   opacity?: number;
   fontFamily?: string;
+  /**
+   * Line breaking: `balance` (even lines), `pretty` (no lone last word) or
+   * `auto`. Absent = the level's default — headings balance, the rest pretty.
+   */
+  textWrap?: 'auto' | 'balance' | 'pretty';
   /** Entrance preset id from animation.json. `'none'` disables the entrance. */
   animPreset?: string;
   animDelay?: number | string;

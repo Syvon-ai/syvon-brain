@@ -132,7 +132,7 @@ const EXPLICIT: Record<string, Capability> = {
   /* A ticket is a NEW line in an append-only log — nothing it can overwrite,
      which the `destructive` flag alone cannot say. The tool itself refuses the
      rating and the status; what it writes is always marked `by: 'agent'`. */
-  create_card: 'create',
+  create_task: 'create',
 
   // ── write: an existing file changes ──
   write_file: 'write',
@@ -146,7 +146,7 @@ const EXPLICIT: Record<string, Capability> = {
   write_file_meta: 'write',
   // A card's status only — the tool itself refuses rating, urgency and
   // `reviewed`, which stay a person's.
-  resolve_card: 'write',
+  resolve_task: 'write',
   // A draft Post is a row pointing at a render — nothing leaves until a person
   // publishes or schedules it, which is why this is not `publish`.
   create_draft_post: 'write',

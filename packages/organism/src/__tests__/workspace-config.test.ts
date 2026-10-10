@@ -174,7 +174,7 @@ describe('the file version log — which roots keep history', () => {
   it('versions what a person or an agent authors', () => {
     for (const root of [
       'projects', 'workflows', 'config', 'meta', 'wrapper',
-      'templates', 'tools', 'skills', 'widget', 'ui',
+      'templates', 'tools', 'skills', 'docs', 'widget', 'ui',
     ]) {
       expect(WORKSPACE_VERSIONED_DIRS, root).toContain(root);
     }

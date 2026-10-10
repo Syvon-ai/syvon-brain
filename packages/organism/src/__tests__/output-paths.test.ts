@@ -5,6 +5,10 @@ import {
   resolveProjectOutputPath,
   resolveRenderOutputPath,
   PREVIEWS_PROJECT_SLUG,
+  projectRoundOf,
+  projectOutputDirFor,
+  isProjectOutputKey,
+  sourceDirOfOutput,
 } from '../dna/output-paths';
 
 /**
@@ -105,5 +109,28 @@ describe('resolveRenderOutputPath', () => {
 
   it('never returns null — that is the whole point over resolveProjectOutputPath', () => {
     expect(typeof resolveRenderOutputPath('nowhere.dsgn', 'a.png')).toBe('string');
+  });
+});
+
+describe('a round keeps its own exports', () => {
+  it('renders of a round source land in that round', () => {
+    expect(resolveRenderOutputPath('projects/listing/v3/01-hero.react', '01-hero.jpg')).toBe('projects/listing/v3/output/01-hero.jpg');
+    expect(resolveRenderOutputPath('projects/listing/01-hero.react', '01-hero.jpg')).toBe('projects/listing/output/01-hero.jpg');
+    expect(projectOutputDirFor('projects/reel/sessions/s-1/reel.comp')).toBe('projects/reel/output');
+  });
+
+  it('only a v{n} folder is a round', () => {
+    expect(projectRoundOf('projects/x/v12/a.comp')).toBe('v12');
+    expect(projectRoundOf('projects/x/version2/a.comp')).toBeNull();
+    expect(projectRoundOf('projects/x/a.comp')).toBeNull();
+  });
+
+  it('readers see both export folders, one level deep', () => {
+    expect(isProjectOutputKey('projects/x/output/a.mp4')).toBe(true);
+    expect(isProjectOutputKey('projects/x/v3/output/a.jpg')).toBe(true);
+    expect(isProjectOutputKey('projects/x/v3/output/sub/a.jpg')).toBe(false);
+    expect(isProjectOutputKey('projects/x/sessions/s/output/a.mp4')).toBe(false);
+    expect(sourceDirOfOutput('projects/x/v3/output/a.jpg')).toBe('projects/x/v3');
+    expect(sourceDirOfOutput('projects/x/output/a.mp4')).toBe('projects/x');
   });
 });

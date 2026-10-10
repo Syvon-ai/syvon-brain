@@ -106,6 +106,19 @@ export type CardOutcome = 'success' | 'failure';
 export const CARD_OUTCOMES: readonly CardOutcome[] = ['success', 'failure'] as const;
 
 /**
+ * WHAT A NOTE IS — only on a `kind: 'feedback'` card, which is a note.
+ *
+ *   reference     "like this video" — something to look at
+ *   instruction   "hard cuts only in this project" — a standing rule
+ *   feedback      "this colour feels off" — a reaction (the default)
+ *   info          a fact about the thing
+ *
+ * It says how the note is read, never whether it is work: no note is work.
+ */
+export const NOTE_KINDS = ['reference', 'instruction', 'feedback', 'info'] as const;
+export type NoteKind = (typeof NOTE_KINDS)[number];
+
+/**
  * HOW MUCH POWER THE TICKET IS WORTH — the third dial on the bar, beside
  * urgency and rating.
  *
@@ -268,7 +281,7 @@ export interface Card {
   /** The lane this card was handed to, once assigned. */
   agent?: string;
   /**
-   * WHO ACTUALLY PICKED IT UP — written by `resolve_card` on `working`, and
+   * WHO ACTUALLY PICKED IT UP — written by `resolve_task` on `working`, and
    * distinct from `agent` on purpose. `agent` is a PROMISE: the pump writes it
    * when it hands a card out, and it stays put whether or not that lane ever
    * started. This is the FACT, and only a lane that called `working` has one.
@@ -279,10 +292,12 @@ export interface Card {
    * the act of taking the card rather than by the act of offering it.
    *
    * Absent on every card written before this field, and on every card nobody
-   * has started. Absence means unheld — the gate in `resolve_card` opens for
+   * has started. Absence means unheld — the gate in `resolve_task` opens for
    * it, which is what keeps an old log workable.
    */
   holder?: string;
+  /** On a note (`kind: 'feedback'`) only: which kind of note — see `NOTE_KINDS`. Absent reads as 'feedback'. */
+  noteKind?: NoteKind;
   /**
    * WHAT MUST BE FINISHED FIRST — ids of cards that have to reach `done` or
    * `reviewed` before this one may be routed to a worker. The dependency edge,
@@ -552,6 +567,26 @@ export const CARD_EVIDENCE_CAP = 24;
 export const CARD_LOG_CAP = 20;
 
 /** Where a card's picture lives, workspace-relative. One per card, by id. */
+/**
+ * HOW LONG A `working` CLAIM HOLDS — the lease.
+ *
+ * Written by `resolve_task` (packages/agent) and read by the workline's
+ * planners (apps/studio `lineup.ts`) so the two answer "is this card still in
+ * somebody's hand" the same way. A worker that died holding a card leaves it
+ * `working` for ever otherwise: nothing writes `done`, and a line that keeps
+ * `working` out of the routable set never re-hands it. Two hours is longer
+ * than any card has taken and short enough that a dead worker costs one
+ * afternoon, not the queue.
+ */
+export const CARD_CLAIM_LEASE_MS = 2 * 60 * 60 * 1000;
+
+/** Has this card's `working` claim outlived the lease? False for anything not `working`. */
+export function claimLapsed(card: Pick<Card, 'status' | 'at_iso'>, now = Date.now()): boolean {
+  if (card.status !== 'working') return false;
+  const since = Date.parse(card.at_iso);
+  return Number.isFinite(since) && now - since > CARD_CLAIM_LEASE_MS;
+}
+
 export const CARD_SHOTS_DIR = 'meta/cards';
 
 export function cardShotPath(id: string): string {

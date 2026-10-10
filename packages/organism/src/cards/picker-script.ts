@@ -349,6 +349,47 @@ export const PICKER = String.raw`
   const onKey = (e) => { if (!armed(e)) draw(null); };
   const off = () => draw(null);
 
+  /**
+   * A PICK FROM A FRAME — a workspace file embedded in this page.
+   *
+   * An embed (an iframe at hero.dsgn?embed) is Studio's renderer in another
+   * origin; this script is never installed there, and could not name a layer
+   * there if it were — only that frame holds the tree. So the frame resolves
+   * its own Ctrl+click and posts it up, and it becomes THIS page's pending
+   * pick, its box moved from the frame's viewport into this one. Accepted only
+   * from a frame of this document; what it says is as untrusted as anything
+   * else a page says, and the host adjudicates it the same way.
+   */
+  const onFramePick = (e) => {
+    const d = e.data;
+    if (!d || d.type !== 'syvon:spot-pick' || !d.spot) return;
+    let frame = null;
+    const frames = document.querySelectorAll('iframe');
+    for (let i = 0; i < frames.length; i++) {
+      if (frames[i].contentWindow === e.source) { frame = frames[i]; break; }
+    }
+    if (!frame) return;
+    const n = (v) => (typeof v === 'number' && isFinite(v) ? v : 0);
+    const s = d.spot;
+    const r = s.rect || {};
+    const f = frame.getBoundingClientRect();
+    const label = typeof s.label === 'string' ? s.label : '';
+    pending = {
+      target: typeof s.target === 'string' ? s.target : '',
+      at: typeof s.at === 'string' ? s.at : '',
+      label: label,
+      tag: label,
+      rect: {
+        left: f.left + frame.clientLeft + n(r.left),
+        top: f.top + frame.clientTop + n(r.top),
+        width: n(r.width),
+        height: n(r.height),
+      },
+    };
+    if (d.feedback === true) pending.feedback = true;
+    try { window.dispatchEvent(new CustomEvent('syvon:spot')); } catch (_) {}
+  };
+
   const opts = true;
   function install() {
     document.addEventListener('mousemove', onMove, opts);
@@ -359,6 +400,7 @@ export const PICKER = String.raw`
     document.addEventListener('click', onClick, opts);
     document.addEventListener('keyup', onKey, opts);
     window.addEventListener('blur', off);
+    window.addEventListener('message', onFramePick);
   }
 
   window.__syvonSpot = {
@@ -371,3 +413,4 @@ export const PICKER = String.raw`
   return 'installed';
 })()
 `;
+

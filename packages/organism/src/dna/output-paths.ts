@@ -27,6 +27,7 @@
  */
 import { WS_WORK } from '../workspace-config';
 import { WS_SESSIONS } from './session-paths';
+import { isProjectVersionDir } from './project-paths';
 
 /** Normalize to forward slashes and drop any leading slashes. */
 function norm(p: string): string {
@@ -70,20 +71,69 @@ export function isSessionScopedPath(path: string): boolean {
 }
 
 /**
+ * The ROUND a project path sits in — `v3` for `projects/x/v3/hero.react` — or
+ * null at the project root, in a session, or off `projects/`.
+ */
+export function projectRoundOf(path: string): string | null {
+  const parts = norm(path).split('/').filter(Boolean);
+  if (parts.length < 4) return null; // projects/{slug}/v{n}/{file}
+  if (parts[0]!.toLowerCase() !== WS_WORK.toLowerCase()) return null;
+  return isProjectVersionDir(parts[2]!) ? parts[2]! : null;
+}
+
+/**
+ * Where renders of `sourcePath` belong: the round's own `output/` for a source
+ * in a round folder (`projects/x/v3/output/`), else the project's
+ * (`projects/x/output/`). Exports stay with the version that made them, so two
+ * rounds can be compared side by side instead of the newer render overwriting
+ * the older. Null off `projects/`.
+ */
+export function projectOutputDirFor(sourcePath: string): string | null {
+  const slug = projectSlugFromPath(sourcePath);
+  if (!slug) return null;
+  const round = projectRoundOf(sourcePath);
+  return round ? `${WS_WORK}/${slug}/${round}/output` : `${WS_WORK}/${slug}/output`;
+}
+
+/**
+ * A project EXPORT key — a file directly in `projects/{slug}/output/` or in a
+ * round's `projects/{slug}/v{n}/output/`. Workspace-relative; strip any
+ * `workspaces/{id}/` bucket prefix first. The ONE matcher every reader of
+ * exports uses, so a round's renders are seen wherever the project's are.
+ */
+export const PROJECT_OUTPUT_KEY_RE = /^projects\/[^/]+\/(?:v\d+\/)?output\/[^/]+$/i;
+
+export function isProjectOutputKey(key: string): boolean {
+  return PROJECT_OUTPUT_KEY_RE.test(norm(key));
+}
+
+/**
+ * The folder an export's SOURCE sits in: `projects/x/v3/output/a.jpg` →
+ * `projects/x/v3`, `projects/x/output/a.mp4` → `projects/x`. Null when the key
+ * is not a project export.
+ */
+export function sourceDirOfOutput(key: string): string | null {
+  const k = norm(key);
+  if (!PROJECT_OUTPUT_KEY_RE.test(k)) return null;
+  return k.slice(0, k.lastIndexOf('/output/'));
+}
+
+/**
  * The publishable destination for an artifact derived from `sourcePath`:
- * `projects/{slug}/output/{filename}` — flattening any session segment, because
- * the render of a draft is the export.
+ * `projects/{slug}/output/{filename}`, or `projects/{slug}/v{n}/output/{filename}`
+ * for a source in a round — flattening any session segment, because the render
+ * of a draft is the export.
  *
  * Returns null when the source is not under `projects/`, so the caller keeps
  * whatever fallback it had (`export/`) for genuinely project-less renders —
  * this helper narrows the default, it does not invent a project.
  */
 export function resolveProjectOutputPath(sourcePath: string, filename: string): string | null {
-  const slug = projectSlugFromPath(sourcePath);
-  if (!slug) return null;
+  const dir = projectOutputDirFor(sourcePath);
+  if (!dir) return null;
   const name = norm(filename).split('/').filter(Boolean).pop();
   if (!name) return null;
-  return `${WS_WORK}/${slug}/output/${name}`;
+  return `${dir}/${name}`;
 }
 
 /**

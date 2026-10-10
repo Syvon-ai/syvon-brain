@@ -25,7 +25,9 @@ import {
   CARD_OUTCOMES,
   CARD_POWERS,
   CARD_STATUSES,
+  NOTE_KINDS,
 } from './card-types';
+import { appendLedger, migrateLedger, readLedgerLines, readMigrationMark, tasksPath } from '../ledger/tasks-notes';
 
 /** IO this module needs. Structurally compatible with `FileMetaContext`, so a
  *  host that already built one for the sidecars passes the same object. */
@@ -53,7 +55,9 @@ export interface CardsContext {
 }
 
 /**
- * `meta/cards.jsonl` under a workspace root.
+ * THE LEGACY LOG's path — `meta/cards.jsonl` under a workspace root. Tasks and
+ * notes live in their own files now (`tasksPath`, `notesPath`); this names the
+ * old one, which is the backup after migration and the fallback before it.
  *
  * An EMPTY root returns the bare relative path, which is what an agent tool
  * wants: `ToolContext`'s file IO is already rooted at the workspace, so a tool
@@ -254,6 +258,11 @@ export function parseCardLine(line: string): Card | null {
   if (typeof v.outcome === 'string' && (CARD_OUTCOMES as readonly string[]).includes(v.outcome)) {
     card.outcome = v.outcome as (typeof CARD_OUTCOMES)[number];
   }
+  /* A note's own kind, kept only on a note and only when it is one we know. */
+  if (card.kind === 'feedback' && typeof v.noteKind === 'string'
+    && (NOTE_KINDS as readonly string[]).includes(v.noteKind)) {
+    card.noteKind = v.noteKind as (typeof NOTE_KINDS)[number];
+  }
   /* THE BLOCKERS ARE READ LIKE AN EVIDENCE LIST, on purpose — same helper, same
      cap. A line whose `after` arrived as a string, or with a null in it, is a
      card with no blockers rather than an unreadable one: the instruction is the
@@ -340,38 +349,51 @@ export function filterCards(cards: Card[], q: CardQuery): Card[] {
  * exist", and a card whose last line says `dropped` does not — see
  * `CardStatus`. It is filtered HERE rather than in `effectiveCards` on
  * purpose: that function is the primitive "latest line per id", and the two
- * readers that want the whole history (`card_activity`, and the compaction
+ * readers that want the whole history (`task_activity`, and the compaction
  * that rewrites the log) must keep seeing the tombstone or they would report a
  * deletion as if it had never happened, and compaction would quietly resurrect
  * the card the next time a mirror appended its old lines.
  */
 export async function readCards(ctx: CardsContext, workspaceRoot: string): Promise<Card[]> {
-  let raw: string;
-  try {
-    raw = await ctx.readFile(cardsPath(workspaceRoot));
-  } catch {
-    return [];
-  }
-  const cards = effectiveCards(parseCardsJsonl(raw));
+  /* TASKS AND NOTES, AS ONE LIST OF CARDS — see `ledger/tasks-notes.ts`.
+     A READ NEVER MIGRATES: listing a queue must not write to it (`list_tasks`
+     is a read, and a read that writes races every worker). Before the first
+     write the view is the legacy log itself; after it, the two files plus any
+     legacy line an unmoved writer appended since. */
+  const read = (p: string) => ctx.readFile(p).catch(() => null);
+  const cards = effectiveCards(await readLedgerLines(read, workspaceRoot));
 
-  /* COMPACTION HAPPENS HERE NOW, not at the append. It used to ride on
-     `appendCard`, which held the whole log because it read it to add a line.
-     An append does not read, so this is the only place left that holds the
-     file — and it is the honest one: a compaction is a rewrite, and a rewrite
-     belongs immediately after a fresh read, where a stale snapshot cannot cost
-     anything. Best effort: a log that could not be compacted is merely long. */
-  const lineCount = raw.split('\n').filter((l) => l.trim()).length;
-  if (lineCount > CARDS_LOG_CAP) {
+  /* COMPACTION HAPPENS HERE, on the tasks log — notes are one line per edit
+     and never grow like a worked queue does. The mark stays first. Best
+     effort: a log that could not be compacted is merely long. */
+  const path = tasksPath(workspaceRoot);
+  const raw = await read(path);
+  if (raw && raw.split('\n').filter((l) => l.trim()).length > CARDS_LOG_CAP) {
+    const mark = readMigrationMark(raw);
+    const tasks = effectiveCards(parseCardsJsonl(raw));
     try {
-      await ctx.writeFile(
-        cardsPath(workspaceRoot),
-        `${cards.map((c) => JSON.stringify(c)).join('\n')}\n`,
-      );
+      await ctx.writeFile(path, `${[...(mark ? [JSON.stringify(mark)] : []), ...tasks.map((c) => JSON.stringify(c))].join('\n')}
+`);
     } catch {
       // Long, not broken.
     }
   }
   return cards.filter((c) => c.status !== 'dropped');
+}
+
+/** Workspaces this context has already migrated, so each touch after the first costs nothing. */
+const migrated = new WeakMap<CardsContext, Set<string>>();
+async function ensureMigrated(ctx: CardsContext, workspaceRoot: string): Promise<void> {
+  let done = migrated.get(ctx);
+  if (!done) { done = new Set(); migrated.set(ctx, done); }
+  if (done.has(workspaceRoot)) return;
+  try {
+    await migrateLedger(ctx, workspaceRoot);
+    done.add(workspaceRoot);
+  } catch {
+    /* A host that cannot write yet still reads: `readLedgerLines` falls back
+       to the legacy log while `tasks.jsonl` does not exist. */
+  }
 }
 
 /**
@@ -400,49 +422,16 @@ export async function appendCard(
   card: Card | Card[],
 ): Promise<void> {
   const batch = Array.isArray(card) ? card : [card];
-  // Nothing to say. Writing anyway would rewrite the log to add no line, and
-  // on a workspace with no log yet it would create one holding a bare newline.
+  // Nothing to say. Writing anyway would create a file holding a bare newline.
   if (!batch.length) return;
-  const path = cardsPath(workspaceRoot);
-  const added = batch.map((c) => JSON.stringify(c));
-
-  /* THE ONLY WRITE THAT CANNOT EAT SOMEBODY ELSE'S LINE — no read, so there is
-     no snapshot to go stale between reading and writing. See
-     `CardsContext.appendFile`. Compaction moves to the read, which is the only
-     place that still holds the whole log. */
-  if (ctx.appendFile) {
-    try {
-      await ctx.appendFile(path, `${added.join('\n')}\n`);
-      return;
-    } catch {
-      /* AND IF THE HOST CANNOT ACTUALLY DO IT, WRITE THE CARD ANYWAY.
-         An `appendFile` on the context is a CLAIM by the host, and a claim can
-         be wrong in a way nothing here can see: Studio's preload and its main
-         process are compiled together and reload separately, so a window
-         reload can pick up a preload that offers `append` while the main
-         process it talks to has no handler for it yet — the call rejects with
-         "No handler registered". Watched happening, on the very fix this path
-         exists for.
-
-         Falling through to the read-modify-write below is the old behaviour
-         with the old race, which is strictly better than the alternative: the
-         whole point of this change is that a person's instruction is never
-         lost, and a card that throws on the way to disk is lost with far more
-         certainty than one that races. */
-    }
-  }
-
-  let existing = '';
-  try {
-    existing = await ctx.readFile(path);
-  } catch {
-    // First card in this workspace. `meta/` is an auto-created root and the
-    // write handlers mkdir their parent, so there is nothing to create here.
-  }
-  const lines = existing ? existing.split('\n').filter((l) => l.trim()) : [];
-  lines.push(...added);
-  const next = lines.length > CARDS_LOG_CAP ? compactCardsLog(lines) : lines;
-  await ctx.writeFile(path, `${next.join('\n')}\n`);
+  /* MIGRATE BEFORE THE FIRST WRITE. `tasks.jsonl` existing is what says a
+     workspace has moved, so the first task line written into an unmigrated
+     one would strand its whole legacy history. Then each line goes to the
+     file its kind belongs in — a task to `tasks.jsonl`, a note-card to
+     `notes.jsonl` — with the append-first rule both always had (`appendLedger`,
+     `CardsContext.appendFile`). */
+  await ensureMigrated(ctx, workspaceRoot);
+  await appendLedger(ctx, workspaceRoot, batch);
 }
 
 /** Collapse the log to one line per card. Only called when it is over cap. */

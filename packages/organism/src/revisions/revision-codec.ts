@@ -121,7 +121,7 @@ export function revisionsForPath(revs: Revision[], path: string): Revision[] {
 }
 
 /** Everything under a folder, by the same segment-aware containment
- *  `list_cards` uses. This is the only history a folder has ever had:
+ *  `list_tasks` uses. This is the only history a folder has ever had:
  *  `FolderMeta` carries none and no `append_folder_history` exists. */
 export function revisionsWithin(revs: Revision[], prefix: string): Revision[] {
   return revs.filter((r) => targetWithin(r.path, prefix));

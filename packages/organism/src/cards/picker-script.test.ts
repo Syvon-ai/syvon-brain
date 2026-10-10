@@ -317,4 +317,54 @@ describe('the browser pane picker', () => {
     press(own!, { ctrlKey: true });
     expect(win.__syvonSpot.take()).toBeNull();
   });
+
+  /*
+   * A PICK FROM AN EMBEDDED FILE — the frame resolves its own Ctrl+click
+   * (only it holds the file's tree) and posts it up; the picker adopts it as
+   * this page's pick, its box moved into this page's viewport. Only a frame of
+   * this document is heard.
+   */
+  describe('a pick posted by an embedded frame', () => {
+    const framePick = {
+      type: 'syvon:spot-pick',
+      spot: { target: 'projects/launch/hero.dsgn', at: 'root/0/1', label: 'Headline', rect: { left: 5, top: 7, width: 40, height: 12 } },
+    };
+
+    function post(data: unknown, source: unknown): void {
+      win.dispatchEvent(new win.MessageEvent('message', { data, source: source as Window }));
+    }
+
+    it('becomes the page pick, offset by where the frame sits', () => {
+      page(`${MARKED}<iframe id="embed"></iframe>`);
+      const frame = win.document.getElementById('embed') as HTMLIFrameElement;
+      post(framePick, frame.contentWindow);
+      expect(win.__syvonSpot.take()).toMatchObject({
+        target: 'projects/launch/hero.dsgn',
+        at: 'root/0/1',
+        label: 'Headline',
+        // The stubbed rect puts every element at (10, 20).
+        rect: { left: 15, top: 27, width: 40, height: 12 },
+      });
+    });
+
+    it('carries the blue point across', () => {
+      page('<iframe id="embed"></iframe>');
+      const frame = win.document.getElementById('embed') as HTMLIFrameElement;
+      post({ ...framePick, feedback: true }, frame.contentWindow);
+      expect(win.__syvonSpot.take()).toMatchObject({ feedback: true });
+    });
+
+    it('ignores a message that did not come from one of its frames', () => {
+      page('<iframe id="embed"></iframe>');
+      post(framePick, win);
+      expect(win.__syvonSpot.take()).toBeNull();
+    });
+
+    it('ignores messages of any other shape', () => {
+      page('<iframe id="embed"></iframe>');
+      const frame = win.document.getElementById('embed') as HTMLIFrameElement;
+      post({ type: 'something-else' }, frame.contentWindow);
+      expect(win.__syvonSpot.take()).toBeNull();
+    });
+  });
 });

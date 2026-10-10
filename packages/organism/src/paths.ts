@@ -16,7 +16,7 @@
 // `brands/` stays listed though it is retired: a surviving reference should
 // resolve to the (empty) root folder and 404 honestly, not silently become a
 // path under whatever directory the .seq happens to live in.
-const WS_ROOT_RE = /^(templates|projects|workflows|flows|content|brands|assets|config|meta|wrapper|knowledge|widget|ui|import|admin|skills|agents|\.syvon|\.renders|\.meta|posts|sessions|tools)\//i;
+const WS_ROOT_RE = /^(templates|projects|workflows|flows|content|brands|assets|config|meta|wrapper|knowledge|widget|ui|import|admin|skills|agents|docs|\.syvon|\.renders|\.meta|posts|sessions|tools)\//i;
 
 /**
  * Normalize path to forward slashes, collapse duplicate slashes, trim whitespace.

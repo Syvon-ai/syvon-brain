@@ -52,7 +52,7 @@
  *
  * `created` is a CLAIM, and `appendRevision` checks it: a caller claiming
  * `created` for a path the log has already seen is written as `changed` and
- * told so — named, never silent, the same treatment `resolve_card` gives a
+ * told so — named, never silent, the same treatment `resolve_task` gives a
  * refused field. A `v1` whose `op` is `changed` therefore means "first RECORDED
  * change", not "new file", and a reader must say so: a version number that
  * pretends to be the file's true age is worse than no version number.

@@ -1,11 +1,24 @@
 /**
  * v7 project path helpers.
  *
- * All project content lives under `projects/{slug}/` — flat, no sub-collections.
+ * All project content lives under `projects/{slug}/` — flat, no sub-collections,
+ * with ONE exception: a project iterated in rounds keeps each round in a
+ * version folder, `projects/{slug}/v{n}/`, flat inside. That is the round, not
+ * a collection: its comps, sources and assets are the project's, the intent at
+ * the project root names them (`comp: v2/hero.comp`), and renders still land in
+ * the project's own `output/`. Any other sub-folder holding a `.comp` is drift.
  * The top-level segment is `WS_WORK`, sourced from the folder registry so a
  * rename of the folder vocabulary propagates here automatically.
  */
 import { WS_WORK } from '../workspace-config';
+
+/** A project's round folder — the `v2` in `projects/{slug}/v2/`. */
+export const PROJECT_VERSION_DIR = /^v\d+$/;
+
+/** Is this path segment a project round folder (`v1`, `v2`, …)? */
+export function isProjectVersionDir(segment: string): boolean {
+  return PROJECT_VERSION_DIR.test(segment);
+}
 
 /** Get the project folder path (R2 prefix). */
 export function getProjectFolder(slug: string): string {

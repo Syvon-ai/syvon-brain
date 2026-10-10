@@ -352,6 +352,7 @@ export type {
   ImageJudge,
 } from './crawl-ingest';
 export type { ProjectItemKind as ProjectItemKindLiteral } from './dna/defaults/structure-v7';
+export { PROJECT_VERSION_DIR, isProjectVersionDir } from './dna/project-paths';
 export { getProjectFolder, getProjectItemPath, getProjectItemKey, toProjectItemObjectKey, getProjectContextPath, getProjectGenerationPath, isInfraFile } from './dna/project-paths';
 export {
   POSTS_DIR, POST_MEDIA_STEM, POST_POSTER_FILENAME, POST_DESCRIPTOR_FILENAME,
@@ -399,6 +400,12 @@ export {
   isSessionScopedPath,
   resolveProjectOutputPath,
   resolveRenderOutputPath,
+  // A round's exports live in its own `v{n}/output/` — one matcher for readers.
+  projectRoundOf,
+  projectOutputDirFor,
+  PROJECT_OUTPUT_KEY_RE,
+  isProjectOutputKey,
+  sourceDirOfOutput,
   brandSlugFromThemeRoot,
   brandStampedFilename,
   PREVIEWS_PROJECT_SLUG,
@@ -487,6 +494,8 @@ export {
   // The semantic source of truth — exported so write policies can name it the
   // day the root is registered, not after the first refused write.
   WS_CONTENT,
+  // The workspace's own documentation — exported for the write allowlist.
+  WS_DOCS,
   ensureProjectFolder,
   inferTemplateType,
   isWorkspaceRootPath,
@@ -808,6 +817,14 @@ export type {
   CardAuthor,
   CardOutcome,
   CardPower,
+  // The filing rule — a selection, a sentence and the dials, as one card.
+  FilingAction,
+  FilingShape,
+  FilingActionChoice,
+  FilingSpot,
+  FilingDials,
+  FilingInput,
+  CardFiling,
 } from './cards/index';
 export {
   CARDS_FILE,
@@ -823,7 +840,11 @@ export {
   cardActError,
   // The evidence block — its cap, and where a card's picture lives.
   CARD_EVIDENCE_CAP,
+  CARD_LOG_CAP,
   CARD_SHOTS_DIR,
+  CARD_CLAIM_LEASE_MS,
+  claimLapsed,
+  NOTE_KINDS,
   cardShotPath,
   cardDrawingPath,
   toCardTarget,
@@ -844,6 +865,20 @@ export {
   CARD_TARGET_ATTR,
   cardSpot,
   cardTarget,
+  // The filing rule, shared by Studio's bar and Surface's - see `cards/card-filing.ts`.
+  FILING_ACTION_LABEL,
+  FILING_ACTION_ICON,
+  CARD_KIND_ICON,
+  filingActionKind,
+  deriveFilingAction,
+  commonFolder,
+  briefFor,
+  cardFilingFor,
+  feedbackFilingFor,
+  // A ledger on storage with no append (R2) - see cards/conditional-ledger.ts.
+  conditionalLedger,
+  LedgerConflict,
+  type ConditionalStorage,
 } from './cards/index';
 
 // ── REVISIONS ───────────────────────────────────────────────────────────────
@@ -896,3 +931,9 @@ export {
 
 // Portable intent, scope, outcome and Dream receipt contracts.
 export * from './work/contracts';
+// Project classification — what a project IS (kind, subtype, axes, icon).
+export * from './work/project-class';
+// Tasks and notes — the two files the card ledger is split into. See `ledger/tasks-notes.ts`.
+export * from './ledger';
+// Tools that changed name — old name → current, read by allowlists and the agent registry.
+export { TOOL_RENAMES, currentToolName } from './dna/tool-renames';

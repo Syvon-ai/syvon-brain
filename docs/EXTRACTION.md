@@ -1,5 +1,7 @@
 # Source provenance
 
+Last sync: 2026-10-10. Source revision: 921d2df2dc52923e9ab32565c57cbbd5bf1ce08c. Synced by `scripts/publish-brain.mts` in the source repository.
+
 Initial extraction: 2026-09-21. Source revision: 30249a7181945df2c123e15756c77751226652b8.
 
 Only tracked files under packages/organism/src and packages/tool-library/src were copied. No private repository history, workspace content, credentials, app configuration, or uncommitted Brain UI changes were copied. Packaging, CI, examples and documentation are specific to this standalone release.

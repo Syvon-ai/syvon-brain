@@ -54,6 +54,9 @@ export const TOOL_PACKAGES = {
     description: 'Inspect and display what exists — readers resolved from the file, viewers resolved from the type.',
     tools: [
       'read', 'read_asset', 'read_format', 'show', 'preview_file', 'get_download_url', 'run_diagnostics',
+      // The brand's picture pool, with what each folder is ABOUT — a reader of
+      // what exists, read before imagery is chosen. Already on Surface's lane.
+      'list_media',
     ],
   },
   reference: {
@@ -176,7 +179,7 @@ export const TOOL_PACKAGES = {
     /**
      * A CUSTOMER package, and that is the decision worth recording.
      *
-     * The card tools themselves (`create_card`, `list_cards`, `resolve_card`)
+     * The card tools themselves (`create_task`, `list_tasks`, `resolve_task`)
      * are in `build` — the design engineer's surface — because writing findings
      * and working a queue is what that audience does. Capture is not that. "Save
      * this to my Syvon workspace" is said by the person who owns the workspace,
@@ -186,7 +189,7 @@ export const TOOL_PACKAGES = {
      *
      * `promote_draft` is here rather than in `build` for the same reason: the
      * person deciding a note should be worked is the person who wrote it. It
-     * writes to the same one card log, under the same fences as `create_card`
+     * writes to the same one card log, under the same fences as `create_task`
      * (`by: 'agent'`, no rating, never `done`) — so this package widens who can
      * ASK, never who can judge.
      */
@@ -215,7 +218,7 @@ export const TOOL_PACKAGES = {
       'create_solver_artifact', 'run_solver',
       'query_skill', 'load_skill_file',
       'read_file_meta', 'write_file_meta', 'append_file_history', 'search_file_meta',
-      'list_cards', 'create_card', 'card_activity', 'resolve_card', 'list_revisions',
+      'list_tasks', 'create_task', 'task_activity', 'resolve_task', 'list_revisions',
       'validate_artifact', 'validate_plan', 'validate_workflow_graph',
       'review_composition', 'validate_design',
     ],
@@ -232,7 +235,7 @@ export const TOOL_PACKAGES = {
     description: 'Estate tooling — cloud sync, provisioning, publishing, local render pipelines. Injected by workspace-sync, not registry entries; master/operator surfaces only, never lent.',
     estate: true,
     tools: [
-      'workspace_list', 'workspace_create', 'workspace_pull', 'workspace_push',
+      'workspace_list', 'workspace_create', 'workspace_pull', 'workspace_push', 'workspace_sync',
       'workspace_health', 'workspace_status', 'workspace_publish',
       'workspace_create_agent', 'workspace_run_flow', 'workspace_generate', 'workspace_mint_key',
       'render_linesheet', 'simulate_react', 'verify_seams', 'hf_import', 'comfy_run',

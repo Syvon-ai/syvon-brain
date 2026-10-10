@@ -13,11 +13,18 @@ export interface DesignTokenColors {
   surface: string;
   canvas?: string;
   text: string;
+  /** Explicit values win over the derived ones in the v1->v2 migration. */
+  textMuted?: string;
+  border?: string;
+  /** Any other colour a v1 file carried; the migration keeps it as `color.<key>`. */
+  [key: string]: string | undefined;
 }
 
 export interface DesignTokenFonts {
   heading: string;
   body: string;
+  /** Any other font role (e.g. `icons`); the migration keeps it as `font.<key>`. */
+  [key: string]: string | undefined;
 }
 
 export interface DesignTokenType {
