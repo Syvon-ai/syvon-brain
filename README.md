@@ -71,4 +71,4 @@ CI runs the same checks and the built-package example. Contributions are welcome
 
 ## License
 
-[MIT](LICENSE). Copyright 2026 Syvon.
+[GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`). Copyright 2026 Syvon.

@@ -6,4 +6,4 @@ Keep storage and model providers injectable. Preserve existing path and data con
 
 The roadmap describes proposed capabilities. Discuss substantial additions in a GitHub issue before implementing them. Explain the problem, behavior change and validation in your pull request.
 
-Contributions are provided under the project's MIT license.
+Contributions are provided under the project's license, the GNU Affero General Public License v3.0 (`AGPL-3.0-only`).
