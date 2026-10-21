@@ -1,6 +1,6 @@
 {
   "name": "@syvon/tool-guides",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The usage guide for every Syvon MCP tool, one file per tool",
   "license": "AGPL-3.0-only",
   "type": "module",

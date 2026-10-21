@@ -274,6 +274,14 @@ export const WORKSPACE_CONFIG = {
     // and what would let a public CDN domain sit in front of it. Anything that
     // unpublishes MUST delete the copy here (see `demotePost`).
     { path: 'posts',     label: 'Posts',        autoCreate: false, reserved: true,  hidden: false, sync: false, versioned: false },   // copy-on-publish bytes only
+    // A Post row's OWN copy of its media — `post-media/{postId}/` — made when the
+    // draft is made and pointed at instead of the working render, so a re-render,
+    // a renamed project or a cleaned-up version folder can no longer change or
+    // break a post (see @syvon/post-format's post-media.ts). Not `posts/`: drafts
+    // are not published, and that prefix is served as published. `sync: false`
+    // for the reason `posts/` is: written straight to R2, never authored in a
+    // checkout, so `ws push` must never upload it or prune it.
+    { path: 'post-media', label: 'Post media',  autoCreate: false, reserved: true,  hidden: true,  sync: false, versioned: false },   // each post's own bytes
     // Agent conversations. Promoted from `projects/{slug}/sessions/{id}/` to a
     // top-level root: a session is no longer OWNED by a project, it POINTS at
     // one. That is what lets a single conversation move between projects, and

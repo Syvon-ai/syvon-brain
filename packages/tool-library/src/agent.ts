@@ -53,6 +53,8 @@ export const AGENT_LAYER: readonly string[] = [
   'read_file',
   // Audio — a reel has a voice, a bed and a hit. Surface never needed them.
   'generate_voice', 'generate_music', 'generate_sound_effect',
+  // A character's own voice, designed from a description, for generate_voice.
+  'design_voice',
   // A `.docx` when someone asks for the brief, the proposal or the one-pager
   // itself rather than a page of it. NOT in `SURFACE_APP`: Surface hands over a
   // deck's copy as a document through the export button, which is a different

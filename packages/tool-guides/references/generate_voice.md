@@ -14,7 +14,7 @@ Workspace-relative path where the audio file will be saved (e.g. projects/my-pro
 
 ### voiceId — string
 
-ElevenLabs voice ID. If omitted, uses a default voice. Use GET /v1/voices to list available voices.
+ElevenLabs voice ID. If omitted, uses a default voice. Use GET /v1/voices to list available voices. A voice made with design_voice (action "save") is passed here by the voiceId it returned.
 
 ### modelId — string
 

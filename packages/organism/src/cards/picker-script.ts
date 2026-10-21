@@ -180,10 +180,10 @@ export const PICKER = String.raw`
    * address the same way. Capped, because a path nobody can read is not an
    * address — past a dozen steps the section itself is the better answer.
    */
-  function pathFrom(root, el) {
+  function pathFrom(root, el, max) {
     const parts = [];
     let cur = el;
-    while (cur && cur !== root && cur.parentElement && parts.length < 12) {
+    while (cur && cur !== root && cur.parentElement && parts.length < (max || 12)) {
       const parent = cur.parentElement;
       const tag = cur.tagName.toLowerCase();
       let n = 0;
@@ -213,7 +213,23 @@ export const PICKER = String.raw`
     if (!el) return null;
     const part = el.closest('[' + AT + ']');
     const box = (part || el).closest('[' + TARGET + ']');
-    if (!box) return null;
+    /* AN UNMARKED PAGE, when the host asked for any element
+       (window.__syvonSpotAny). The target is left empty for the host to fill
+       with the page itself, and the address is the element's path from body. */
+    if (!box) {
+      if (!window.__syvonSpotAny || !document.body) return null;
+      const r0 = el.getBoundingClientRect();
+      if (!r0.width || !r0.height) return null;
+      const path0 = el === document.body ? '' : pathFrom(document.body, el, 40);
+      const name0 = labelFor(el);
+      return {
+        target: '',
+        at: path0,
+        label: name0,
+        tag: total > 1 ? name0 + '  ' + (depth + 1) + '/' + total : name0,
+        rect: { left: r0.left, top: r0.top, width: r0.width, height: r0.height },
+      };
+    }
     const anchor = part || box;
     const base = part ? part.getAttribute(AT) || '' : '';
     const inner = el === anchor ? '' : pathFrom(anchor, el);

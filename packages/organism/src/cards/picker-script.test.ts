@@ -294,6 +294,17 @@ describe('the browser pane picker', () => {
     expect(win.__syvonSpot.take()).toBeNull();
   });
 
+  it('picks any element on an unmarked page when the host asks for it, target left to the host', () => {
+    dom = new JSDOM('<!doctype html><body><main><p>one</p><p id="two">two</p></main></body>', { runScripts: 'outside-only', pretendToBeVisual: true });
+    win = dom.window as unknown as typeof win;
+    win.Element.prototype.getBoundingClientRect = function () {
+      return { left: 10, top: 20, width: 300, height: 120, right: 310, bottom: 140, x: 10, y: 20, toJSON: () => ({}) } as DOMRect;
+    };
+    win.eval('window.__syvonSpotAny = true; ' + PICKER);
+    press(win.document.getElementById('two')!, { ctrlKey: true, shiftKey: true });
+    expect(win.__syvonSpot.take()).toMatchObject({ target: '', at: 'main[0]/p[1]', label: 'p#two', feedback: true });
+  });
+
   it('swallows the press so the page underneath never sees the click', () => {
     let reached = false;
     const hero = win.document.getElementById('hero')!;

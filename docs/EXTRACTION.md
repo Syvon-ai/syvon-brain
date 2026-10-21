@@ -1,6 +1,6 @@
 # Source provenance
 
-Last sync: 2026-10-10. Source revision: 921d2df2dc52923e9ab32565c57cbbd5bf1ce08c. Synced by `scripts/publish-brain.mts` in the source repository.
+Last sync: 2026-10-21. Source revision: 88ee6d4e0ab4f77d9249160a521e2a9e6b7aefa5. Synced by `scripts/publish-brain.mts` in the source repository.
 
 Initial extraction: 2026-09-21. Source revision: 30249a7181945df2c123e15756c77751226652b8.
 

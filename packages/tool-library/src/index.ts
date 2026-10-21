@@ -72,7 +72,7 @@ export const TOOL_PACKAGES = {
     tools: [
       'list_formats', 'hydrate_format', 'create_sequence', 'hydrate_template',
       'upload_file', 'generate_image', 'generate_vector', 'generate_video', 'generate_voice',
-      'generate_music', 'generate_sound_effect', 'remove_background',
+      'generate_music', 'generate_sound_effect', 'design_voice', 'remove_background',
       'describe_image', 'analyze_reference_layout', 'analyze_reference_motion',
       'transcribe_video', 'generate_caption', 'extract_catalog', 'extract_media',
       // Turning a reference INTO material: the shots of a video, as files.

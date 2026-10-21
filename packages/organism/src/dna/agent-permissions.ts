@@ -118,6 +118,7 @@ const EXPLICIT: Record<string, Capability> = {
   generate_voice: 'create',
   generate_music: 'create',
   generate_sound_effect: 'create',
+  design_voice: 'create',
   render_text_mask: 'create',
   render_sequence: 'create',
   screenshot_design: 'create',
